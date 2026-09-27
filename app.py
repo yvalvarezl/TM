@@ -6,11 +6,7 @@ from keras.models import load_model
 import platform
 
 # Configuración de página
-st.set_page_config(page_title="Registro con Validación Facial", page_icon="🔐", layout="centered")
-
-# Inicialización de estado de autenticación
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+st.set_page_config(page_title="Reconocimiento Biométrico · Yos", page_icon="📱", layout="centered")
 
 # Cargar modelo y etiquetas
 @st.cache_resource
@@ -22,85 +18,60 @@ def get_model():
 
 model, labels = get_model()
 
-# Título y presentación
-st.title("🔐 Registro de Usuario")
-st.write("Para iniciar el registro, primero debemos verificar tu identidad usando la cámara.")
-st.caption(f"Versión de Python: {platform.python_version()}")
-
-# Imagen del encabezado
-try:
-    image = Image.open('OIG5.jpg')
-    st.image(image, width=350)
-except Exception:
-    pass
+# Título de la app
+st.title("🤖 Asistente de Reconocimiento")
+st.write("Identificación previa para el uso del dispositivo.")
 
 # Barra lateral informativa
 with st.sidebar:
-    st.header("⚙️ Verificación Biométrica")
-    st.subheader("Este sistema valida si eres el usuario autorizado antes de habilitar el formulario.")
+    st.header("⚙️ Estado del Sistema")
+    st.caption(f"Python v{platform.python_version()}")
+    st.write("Clases configuradas:")
+    for l in labels:
+        st.write(f"- `{l}`")
 
 st.markdown("---")
 
-# ---------------------------------------------------------
-# PASO 1: VALIDACIÓN DE IDENTIDAD CON TEACHABLE MACHINE
-# ---------------------------------------------------------
-st.header("Paso 1: Validación de Identidad")
-
-img_file_buffer = st.camera_input("Toma una foto para validar tu acceso")
+# Cámara de detección
+st.subheader("📸 Verificación en Cámara")
+img_file_buffer = st.camera_input("Pónte frente a la cámara (o acerca el celular)")
 
 if img_file_buffer is not None:
-    # Procesar la imagen tomada por la cámara
+    # Procesar imagen
     img = Image.open(img_file_buffer)
     size = (224, 224)
     img_resized = ImageOps.fit(img, size, Image.Resampling.LANCZOS)
     img_array = np.asarray(img_resized)
     
-    # Normalizar imagen para Teachable Machine
+    # Normalización para Teachable Machine
     normalized_image_array = (img_array.astype(np.float32) / 127.5) - 1
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
     data[0] = normalized_image_array
 
-    # Predicción del modelo
+    # Predicción
     prediction = model.predict(data)
-    index = np.argmax(prediction)
-    class_name = labels[index]
-    confidence_score = float(prediction[0][index])
+    prob_yos = float(prediction[0][0])  # Probabilidad de clase 0 (Yos)
+    prob_cel = float(prediction[0][1])  # Probabilidad de clase 1 (Cel)
 
-    # Extraer el nombre de la clase
-    user_detected = class_name.split(' ', 1)[-1] if ' ' in class_name else class_name
+    st.markdown("---")
 
-    # Condición de validación (Ajusta 'Yoselin' o el nombre exacto de tu clase autorizada)
-    if confidence_score > 0.70 and ("Yoselin" in user_detected or "1" in class_name):
-        st.session_state.authenticated = True
-        st.success(f"✅ ¡Identidad verificada con éxito! Bienvenido/a, **{user_detected}** ({confidence_score*100:.1f}% de confianza).")
-    else:
-        st.session_state.authenticated = False
-        st.error(f"❌ Acceso denegado. Se detectó **{user_detected}** ({confidence_score*100:.1f}% de confianza). Se requiere usuario autorizado.")
-
-st.markdown("---")
-
-# ---------------------------------------------------------
-# PASO 2: FORMULARIO DE REGISTRO
-# ---------------------------------------------------------
-st.header("Paso 2: Datos de Registro")
-
-if st.session_state.authenticated:
-    st.success("🔓 Acceso Autorizado — Completa los siguientes datos de registro:")
-    
-    with st.form("registro_usuario"):
-        col1, col2 = st.columns(2)
-        with col1:
-            nombre = st.text_input("Nombre Completo")
-            correo = st.text_input("Correo Electrónico")
-        with col2:
-            documento = st.text_input("Número de Documento")
-            rol = st.selectbox("Rol", ["Estudiante", "Docente", "Invitado"])
-            
-        biografia = st.text_area("Perfil / Observaciones")
+    # LOGICA DE DETECCIÓN
+    if prob_yos > 0.6:
+        st.success(f"👋 **¡HOLA YOS!** (Probabilidad: {prob_yos*100:.1f}%)")
+        st.info("Te he identificado correctamente. Si quieres habilitar el uso del celular, acerca el dispositivo a la cámara.")
         
-        enviado = st.form_submit_button("Completar Registro")
-        if enviado:
+    elif prob_cel > 0.6:
+        st.warning(f"📱 **VAS A USAR EL CEL** (Probabilidad: {prob_cel*100:.1f}%)")
+        
+        # Pregunta interactiva
+        st.subheader("¿Yos quiere usar el cel? 🤔")
+        opcion = st.radio("Confirma tu acción:", ["Selecciona una opción", "Sí, quiero usarlo", "No, solo estaba probando"])
+        
+        if opcion == "Sí, quiero usarlo":
             st.balloons()
-            st.success("🎉 ¡Registro completado y guardado correctamente!")
-else:
-    st.warning("⚠️ Debes validarte en la cámara como usuario autorizado para activar el formulario.")
+            st.success("🎉 Acceso concedido al dispositivo. ¡Que lo disfrutes, Yos!")
+        elif opcion == "No, solo estaba probando":
+            st.info("Entendido, dispositivo en espera.")
+            
+    else:
+        st.error("❓ No logro identificar ni a Yos ni al celular con suficiente certeza. ¡Inténtalo de nuevo!")
