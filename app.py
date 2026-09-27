@@ -18,22 +18,22 @@ def get_model():
 
 model, labels = get_model()
 
-# Título y presentación
+# Título de la app
 st.title("🤖 Asistente de Reconocimiento")
 st.write("Identificación previa para el uso del dispositivo.")
-st.caption(f"Versión de Python: {platform.python_version()}")
 
-# Imagen de encabezado
+# --- IMAGEN DE ENCABEZADO ---
 try:
-    image = Image.open('OIG5.jpg')
-    st.image(image, width=320)
+    image = Image.open('watermarked_img_10430299949332107592.jpg')
+    st.image(image, width=350)
 except Exception:
     pass
 
 # Barra lateral informativa
 with st.sidebar:
     st.header("⚙️ Estado del Sistema")
-    st.write("Clases configuradas en Teachable Machine:")
+    st.caption(f"Python v{platform.python_version()}")
+    st.write("Clases configuradas:")
     for l in labels:
         st.write(f"- `{l}`")
 
@@ -57,21 +57,18 @@ if img_file_buffer is not None:
 
     # Predicción
     prediction = model.predict(data)
-    prob_yos = float(prediction[0][0])  # Clase 0 (Yos)
-    prob_cel = float(prediction[0][1])  # Clase 1 (Cel)
+    prob_yos = float(prediction[0][0])  # Clase 0
+    prob_cel = float(prediction[0][1])  # Clase 1
 
     st.markdown("---")
-    
-    # Mostrar probabilidades en vivo
-    st.write(f"📊 **Detección:** Yos: {prob_yos*100:.1f}% | Celular: {prob_cel*100:.1f}%")
 
     # LÓGICA DE DETECCIÓN
     if prob_yos > prob_cel and prob_yos > 0.5:
-        st.success(f"👋 **¡HOLA YOS!**")
+        st.success(f"👋 **¡HOLA YOS!** (Probabilidad: {prob_yos*100:.1f}%)")
         st.info("Te he identificado correctamente. Si quieres habilitar el uso del celular, acércalo a la cámara.")
         
     elif prob_cel > prob_yos and prob_cel > 0.5:
-        st.warning(f"📱 **VAS A USAR EL CEL**")
+        st.warning(f"📱 **VAS A USAR EL CEL** (Probabilidad: {prob_cel*100:.1f}%)")
         
         # Pregunta interactiva
         st.subheader("¿Yos quiere usar el cel? 🤔")
@@ -84,4 +81,4 @@ if img_file_buffer is not None:
             st.info("Entendido, dispositivo en espera.")
             
     else:
-        st.error("❓ No logro identificar claramente ni a Yos ni al celular. ¡Inténtalo de nuevo!")
+        st.error("❓ No logro identificar ni a Yos ni al celular con suficiente certeza. ¡Inténtalo de nuevo!")
