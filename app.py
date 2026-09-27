@@ -22,20 +22,12 @@ model, labels = get_model()
 st.title("🤖 Asistente de Reconocimiento")
 st.write("Identificación previa para el uso del dispositivo.")
 
-# Título de la app
-st.title("🤖 Asistente de Reconocimiento")
-st.write("Identificación previa para el uso del dispositivo.")
-
-# --- AQUÍ PONES LA NUEVA IMAGEN ---
+# --- IMAGEN DE ENCABEZADO ---
 try:
-    image = Image.open('watermarked_img_10430299949332107592.jpg')  # Reemplaza 'asistente.jpg' por el nombre de tu archivo cargado
+    image = Image.open('watermarked_img_10430299949332107592.jpg')
     st.image(image, width=350)
 except Exception:
     pass
-# ----------------------------------
-
-# Barra lateral informativa
-with st.sidebar:
 
 # Barra lateral informativa
 with st.sidebar:
@@ -70,7 +62,7 @@ if img_file_buffer is not None:
 
     st.markdown("---")
 
-    # LOGICA DE DETECCIÓN
+    # LÓGICA DE DETECCIÓN
     if prob_yos > prob_cel and prob_yos > 0.5:
         st.success(f"👋 **¡HOLA YOS!** (Probabilidad: {prob_yos*100:.1f}%)")
         st.info("Te he identificado correctamente. Si quieres habilitar el uso del celular, acércalo a la cámara.")
