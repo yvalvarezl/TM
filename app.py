@@ -28,7 +28,7 @@ st.write("Identificación previa para el uso del dispositivo.")
 
 # --- AQUÍ PONES LA NUEVA IMAGEN ---
 try:
-    image = Image.open('asistente.jpg')  # Reemplaza 'asistente.jpg' por el nombre de tu archivo cargado
+    image = Image.open('watermarked_img_10430299949332107592.jpg')  # Reemplaza 'asistente.jpg' por el nombre de tu archivo cargado
     st.image(image, width=350)
 except Exception:
     pass
